@@ -126,11 +126,9 @@ tagMap.apply<"tag2", "tag3">([](auto& value2, auto& value3)
                                  value2 ^= 9u;
                                  value3 = !value3;
                              });
-ctmap::apply([](auto const& taggedValue1, auto const& taggedValue2, auto const& taggedValue3)
+ctmap::apply([](auto const& ...taggedValues)
              {
-                 std::cout << taggedValue1.tag << ": " << taggedValue1.value << '\n'
-                           << taggedValue2.tag << ": " << taggedValue2.value << '\n'
-                           << taggedValue3.tag << ": " << taggedValue3.value << '\n';
+                 ((std::cout << taggedValues.tag << ": " << taggedValues.value << '\n'), ...);
              },
              tagMap);
 ```
