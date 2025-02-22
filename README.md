@@ -1,6 +1,6 @@
 # ctmap
 
-ctmap is a header-only library for compile-time maps between unique string-literal tags and values of an assined type.
+ctmap is a header-only library for compile-time maps between unique string-literal tags and values of an assigned type.
 The aim is to combine advantages of std::tuple and named members variables.
 
 # Usage samples
