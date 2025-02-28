@@ -8,7 +8,7 @@ The aim is to combine advantages of std::tuple and named members variables.
 ## Basic usage
 
 ```cpp
-#include "ctmap/ctmap.h"
+#include "ctmap/include/ctmap.h"
 #include <optional>
 #include <string>
 
@@ -25,8 +25,9 @@ int main()
     );
 
     tagMap.get<"tag1">() = "newString";
-    tagMap.get<"tag2">().reset();
-    tagMap.get<2>().value += 3;
+    tagMap.get<1>().value.reset();
+    ctmap::get<"tag2">(tagMap) = "newOptionalString";
+    ctmap::get<2>(tagMap).value += 4;
 }
 ```
 
@@ -136,8 +137,8 @@ ctmap::apply([](auto const& ...taggedValues)
 ## std::format with tag maps
 
 ```cpp
-#include "ctmap/ctmap.h"
-#include "ctmap/formatter.h"
+#include "ctmap/include/ctmap.h"
+#include "ctmap/include/formatter.h"
 #include <iostream>
 #include <format>
 
