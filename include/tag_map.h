@@ -87,7 +87,7 @@ public:
     template<typename... _ValueTypes>
         requires (sizeof...(_ValueTypes) == sizeof...(_TaggedValues)) && (std::constructible_from<_TaggedValues, _ValueTypes> && ...)
     constexpr explicit tag_map(_ValueTypes&&... values)
-        : taggedValues(std::make_tuple(std::forward<_ValueTypes>(values)...))
+        : taggedValues(std::forward_as_tuple(std::forward<_ValueTypes>(values)...))
     {}
 
     template<TaggedValue... _OtherTaggedValues>
@@ -139,7 +139,15 @@ public:
     }
 
     template<char_tag _Tag>
+        requires (!std::is_reference_v<get_tag_value_type_t<_Tag>>)
     constexpr auto const& get() const&
+    {
+        return std::get<tag_index<_Tag>()>(taggedValues).value;
+    }
+
+    template<char_tag _Tag>
+        requires (std::is_reference_v<get_tag_value_type_t<_Tag>>)
+    constexpr auto&& get() const&
     {
         return std::get<tag_index<_Tag>()>(taggedValues).value;
     }
@@ -151,7 +159,15 @@ public:
     }
 
     template<char_tag _Tag>
+        requires (!std::is_reference_v<get_tag_value_type_t<_Tag>>)
     constexpr auto const&& get() const&&
+    {
+        return std::get<tag_index<_Tag>()>(std::move(taggedValues)).value;
+    }
+
+    template<char_tag _Tag>
+        requires (std::is_reference_v<get_tag_value_type_t<_Tag>>)
+    constexpr auto&& get() const&&
     {
         return std::get<tag_index<_Tag>()>(std::move(taggedValues)).value;
     }
@@ -167,21 +183,21 @@ public:
         requires (sizeof...(_Tags) != 1)
     constexpr auto get() const&
     {
-        return std::forward_as_tuple(get<_Tags>()...);
+        return std::tie(get<_Tags>()...);
     }
 
     template<char_tag... _Tags>
         requires (sizeof...(_Tags) != 1)
     constexpr auto get()&&
     {
-        return std::make_tuple(get<_Tags>()...);
+        return std::forward_as_tuple(std::move(*this).template get<_Tags>()...);
     }
 
     template<char_tag... _Tags>
         requires (sizeof...(_Tags) != 1)
     constexpr auto get() const&&
     {
-        return std::make_tuple(get<_Tags>()...);
+        return std::forward_as_tuple(std::move(*this).template get<_Tags>()...);
     }
 
     template<size_t _Index>
@@ -211,41 +227,25 @@ public:
     template<all_tags_t>
     constexpr auto get()&
     {
-        return std::apply([](auto&... taggedValues)
-                          {
-                              return std::tie(taggedValues.value...);
-                          },
-                          taggedValues);
+        return std::tie(get<_TaggedValues::tag>()...);
     }
 
     template<all_tags_t>
     constexpr auto get() const&
     {
-        return std::apply([](auto const&... taggedValues)
-                          {
-                              return std::forward_as_tuple(taggedValues.value...);
-                          },
-                          taggedValues);
+        return std::tie(get<_TaggedValues::tag>()...);
     }
 
     template<all_tags_t>
     constexpr auto get()&&
     {
-        return std::apply([](auto&&... taggedValues)
-                          {
-                              return std::make_tuple(std::move(taggedValues.value)...);
-                          },
-                          std::move(taggedValues));
+        return std::forward_as_tuple(std::move(*this).template get<_TaggedValues::tag>()...);
     }
 
     template<all_tags_t>
     constexpr auto get() const&&
     {
-        return std::apply([](auto const&&... taggedValues)
-                          {
-                              return std::make_tuple(std::move(taggedValues.value)...);
-                          },
-                          std::move(taggedValues));
+        return std::forward_as_tuple(std::move(*this).template get<_TaggedValues::tag>()...);
     }
 
     template<all_tags_t, typename _Function>
@@ -263,13 +263,13 @@ public:
     template<all_tags_t, typename _Function>
     constexpr auto apply(_Function&& function)&&
     {
-        return std::apply(std::forward<_Function>(function), get<all_tags>());
+        return std::apply(std::forward<_Function>(function), std::move(*this).template get<all_tags>());
     }
 
     template<all_tags_t, typename _Function>
     constexpr auto apply(_Function&& function) const&&
     {
-        return std::apply(std::forward<_Function>(function), get<all_tags>());
+        return std::apply(std::forward<_Function>(function), std::move(*this).template get<all_tags>());
     }
 
     template<char_tag... _Tags, typename _Function>
@@ -287,13 +287,13 @@ public:
     template<char_tag... _Tags, typename _Function>
     constexpr auto apply(_Function&& function)&&
     {
-        return std::apply(std::forward<_Function>(function), get<_Tags...>());
+        return std::apply(std::forward<_Function>(function), std::move(*this).template get<_Tags...>());
     }
 
     template<char_tag... _Tags, typename _Function>
     constexpr auto apply(_Function&& function) const&&
     {
-        return std::apply(std::forward<_Function>(function), get<_Tags...>());
+        return std::apply(std::forward<_Function>(function), std::move(*this).template get<_Tags...>());
     }
 
 private:
@@ -480,7 +480,7 @@ constexpr auto apply(_Function&& function,
                      _TagMap const& tagMap)
 {
     return std::apply(std::forward<_Function>(function),
-                      std::forward_as_tuple(std::get<_TagMap::template tag_index<_Tags>()>(tagMap.taggedValues)...));
+                      std::tie(std::get<_TagMap::template tag_index<_Tags>()>(tagMap.taggedValues)...));
 }
 
 template<char_tag... _Tags, typename _Function, TagMap _TagMap>
@@ -489,7 +489,7 @@ constexpr auto apply(_Function&& function,
                      _TagMap&& tagMap)
 {
     return std::apply(std::forward<_Function>(function),
-                      std::make_tuple(std::get<_TagMap::template tag_index<_Tags>()>(std::move(tagMap.taggedValues))...));
+                      std::forward_as_tuple(std::get<_TagMap::template tag_index<_Tags>()>(std::forward<decltype(tagMap.taggedValues)>(tagMap.taggedValues))...));
 }
 
 template<char_tag... _Tags, typename _Function, TagMap _TagMap>
@@ -498,7 +498,7 @@ constexpr auto apply(_Function&& function,
                      _TagMap const&& tagMap)
 {
     return std::apply(std::forward<_Function>(function),
-                      std::make_tuple(std::get<_TagMap::template tag_index<_Tags>()>(std::move(tagMap.taggedValues))...));
+                      std::forward_as_tuple(std::get<_TagMap::template tag_index<_Tags>()>(std::forward<decltype(tagMap.taggedValues)>(tagMap.taggedValues))...));
 }
 
 template<TaggedValue... _TaggedValues>
@@ -557,7 +557,7 @@ using cut_tag_map_t = typename cut_tag_map<_TagMap, _Tags...>::type;
 template<char_tag... _Tags, TagMap _TagMap>
 constexpr auto tag_map_cut(_TagMap&& tagMap)
 {
-    return cut_tag_map_t<_TagMap, _Tags...>(tagMap.template get<_Tags...>());
+    return cut_tag_map_t<_TagMap, _Tags...>(std::move(tagMap).template get<_Tags...>());
 }
 
 template<char_tag... _Tags, TagMap _TagMap>
