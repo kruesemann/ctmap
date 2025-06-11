@@ -134,6 +134,46 @@ ctmap::apply([](auto const& ...taggedValues)
              tagMap);
 ```
 
+## Tagged references to member variables of an object
+
+```cpp
+struct object
+{
+    auto tie_tag_map() const&
+    {
+        return ctmap::tie_tag_map<"tag1", "tag2">(tag1, tag2);
+    }
+
+    auto tie_tag_map()&
+    {
+        return ctmap::apply([](auto&& ...taggedValues)
+                            {
+                                return ctmap::tie_tag_map<
+                                    std::decay_t<decltype(taggedValues)>::tag...
+                                >(const_cast<std::decay_t<decltype(taggedValues.value)>&>(taggedValues.value)...);
+                            },
+                            const_cast<object const&>(*this).tie_tag_map());
+    }
+
+    int tag1 = 0;
+    std::string tag2;
+};
+
+object o;
+static_assert(std::same_as<
+                    decltype(o.tie_tag_map()),
+                    ctmap::tag_map<
+                        ctmap::tagged_value<"tag1", int&>,
+                        ctmap::tagged_value<"tag2", std::string&>
+                    >>);
+static_assert(std::same_as<
+                    decltype(std::as_const(o).tie_tag_map()),
+                    ctmap::tag_map<
+                        ctmap::tagged_value<"tag1", int const&>,
+                        ctmap::tagged_value<"tag2", std::string const&>
+                    >>);
+```
+
 ## std::format with tag maps
 
 ```cpp
