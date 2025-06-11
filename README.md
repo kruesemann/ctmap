@@ -77,7 +77,7 @@ static_assert(std::same_as<
                   ctmap::tag_map<
                       ctmap::tagged_value<"tag1", bool>,
                       ctmap::tagged_value<"tag2", float>,
-                      ctmap::tagged_value<"tag3", char const(&)[8]>
+                      ctmap::tagged_value<"tag3", char const*>
                   >
               >);
 ```
@@ -95,7 +95,7 @@ static_assert(std::same_as<
                   decltype(smallerTagMap),
                   ctmap::tag_map<
                       ctmap::tagged_value<"tag1", bool>,
-                      ctmap::tagged_value<"tag3", char const(&)[8]>
+                      ctmap::tagged_value<"tag3", char const*>
                   >
               >);
 ```

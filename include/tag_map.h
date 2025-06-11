@@ -532,7 +532,23 @@ template<char_tag... _Tags, typename... _ValueTypes>
 constexpr auto make_tag_map(_ValueTypes&&... values)
 {
     static_assert(sizeof...(_Tags) == sizeof...(_ValueTypes), "sizes of tags and values mismatch");
-    return tag_map<tagged_value<_Tags, _ValueTypes>...>(make_tagged<_Tags>(std::forward<_ValueTypes>(values))...);
+    return tag_map<decltype(make_tagged<_Tags>(std::forward<_ValueTypes>(values)))...>(make_tagged<_Tags>(std::forward<_ValueTypes>(values))...);
+}
+
+template<char_tag... _Tags, typename... _ValueTypes>
+    requires (sizeof...(_Tags) > 0)
+constexpr auto tie_tag_map(_ValueTypes&... values)
+{
+    static_assert(sizeof...(_Tags) == sizeof...(_ValueTypes), "sizes of tags and values mismatch");
+    return tag_map<tagged_value<_Tags, _ValueTypes&>...>(values...);
+}
+
+template<char_tag... _Tags, typename... _ValueTypes>
+    requires (sizeof...(_Tags) > 0)
+constexpr auto forward_as_tag_map(_ValueTypes&&... values)
+{
+    static_assert(sizeof...(_Tags) == sizeof...(_ValueTypes), "sizes of tags and values mismatch");
+    return tag_map<tagged_value<_Tags, _ValueTypes&&>...>(std::forward<_ValueTypes>(values)...);
 }
 
 template<TagMap... _TagMaps>

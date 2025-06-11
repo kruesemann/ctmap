@@ -54,13 +54,31 @@ concept TaggedValue = is_tagged_value_v<_Type>;
 template<char_tag _Tag, typename _ValueType>
 constexpr auto make_tagged(_ValueType&& value)
 {
-    return tagged_value<_Tag, _ValueType>(std::forward<_ValueType>(value));
+    return tagged_value<_Tag, std::decay_t<_ValueType>>(std::forward<_ValueType>(value));
+}
+
+template<char_tag _Tag, typename _ValueType>
+constexpr auto make_tagged(std::reference_wrapper<_ValueType>&& value)
+{
+    return tagged_value<_Tag, _ValueType&>(value.get());
 }
 
 template<char_tag _Tag, typename _ValueType, typename... _ValueTypes>
 constexpr auto make_tagged(_ValueTypes&&... values)
 {
     return tagged_value<_Tag, _ValueType>(std::forward<_ValueTypes>(values)...);
+}
+
+template<char_tag _Tag, typename _ValueType>
+constexpr auto tie_to_tag(_ValueType& value)
+{
+    return tagged_value<_Tag, _ValueType&>(value);
+}
+
+template<char_tag _Tag, typename _ValueType>
+constexpr auto forward_as_tagged(_ValueType&& value)
+{
+    return tagged_value<_Tag, _ValueType&&>(std::forward<_ValueType>(value));
 }
 
 template<char_tag _Tag, typename _LhsValueType, typename _RhsValueType>
