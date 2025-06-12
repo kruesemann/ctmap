@@ -8,14 +8,14 @@ namespace ctmap
 * Helper class for simplifying usage of string literals as template arguments.
 * Without, some_template<"some_string_literal"> would not work.
 */
-template<size_t _Size>
+template<std::size_t _Size>
 struct char_tag
 {
     char value[_Size];
 
     constexpr char_tag(char const (&_value)[_Size]) noexcept
     {
-        for (size_t index = 0; index < _Size; ++index)
+        for (auto index = 0uz; index < _Size; ++index)
             value[index] = _value[index];
     }
 
@@ -25,13 +25,13 @@ struct char_tag
     }
 };
 
-template<size_t _LhsSize, size_t _RhsSize>
+template<std::size_t _LhsSize, std::size_t _RhsSize>
 constexpr bool operator==(char_tag<_LhsSize> const& lhs,
                           char_tag<_RhsSize> const& rhs)
 {
     if constexpr (_LhsSize != _RhsSize)
         return false;
-    for (size_t index = 0; index < _LhsSize; ++index)
+    for (auto index = 0uz; index < _LhsSize; ++index)
         if (lhs.value[index] != rhs.value[index])
             return false;
     return true;
