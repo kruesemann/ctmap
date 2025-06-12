@@ -24,7 +24,7 @@ struct tagged_value
     template<typename _OtherValueType>
         requires std::constructible_from<value_type, _OtherValueType>
     constexpr explicit tagged_value(tagged_value<_Tag, _OtherValueType>&& taggedValue)
-        : value(std::move(taggedValue.value))
+        : value(std::forward<_OtherValueType&&>(taggedValue.value))
     {}
 
     template<typename _OtherValueType>
