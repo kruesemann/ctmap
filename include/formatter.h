@@ -32,8 +32,8 @@ struct std::formatter<_TagMap, char>
                 _Context& context) const
     {
         std::ostringstream out;
-        char const* delim = multiline ? "\n    " : ", ";
-        out << '{' << (multiline ? delim : " ");
+        char const* delim = multiline ? ",\n    " : ", ";
+        out << '{' << (multiline ? "\n    " : " ");
         bool skipDelim = true;
         auto const print = [&](auto const& taggedType)
         {
